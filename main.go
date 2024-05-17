@@ -47,8 +47,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	v.Translate(tr)
-
 	out := csv.NewWriter(os.Stdout)
 
 	header := []string{
@@ -70,14 +68,14 @@ func main() {
 			line := append(
 				[]string(nil),
 				group.Name,
-				group.Category,
-				group.Label,
+				tr.Translate(group.Category),
+				tr.Translate(group.Label),
 				group.Version,
 				action.Name,
-				action.Label,
-				action.Keyboard,
+				tr.Translate(action.Label),
+				kbd.Normalize(action.Keyboard),
 				action.ActivationMode,
-				action.Description,
+				tr.Translate(action.Description),
 			)
 
 			_ = out.Write(line)
@@ -91,12 +89,6 @@ type Profile struct {
 	ActionMaps []ActionMap `xml:"actionmap"`
 }
 
-func (p *Profile) Translate(tr l10n.L10N) {
-	for i := 0; i < len(p.ActionMaps); i++ {
-		p.ActionMaps[i].Translate(tr)
-	}
-}
-
 type ActionMap struct {
 	Name     string   `xml:"name,attr"`
 	Version  string   `xml:"version,attr"`
@@ -105,25 +97,10 @@ type ActionMap struct {
 	Actions  []Action `xml:"action"`
 }
 
-func (m *ActionMap) Translate(tr l10n.L10N) {
-	m.Label = tr.Translate(m.Label)
-	m.Category = tr.Translate(m.Category)
-
-	for i := 0; i < len(m.Actions); i++ {
-		m.Actions[i].Translate(tr)
-	}
-}
-
 type Action struct {
 	Name           string `xml:"name,attr"`
 	Keyboard       string `xml:"keyboard,attr"`
 	Label          string `xml:"UILabel,attr"`
 	Description    string `xml:"UIDescription,attr"`
 	ActivationMode string `xml:"activationMode,attr"`
-}
-
-func (a *Action) Translate(tr l10n.L10N) {
-	a.Label = tr.Translate(a.Label)
-	a.Description = tr.Translate(a.Description)
-	a.Keyboard = kbd.Normalize(a.Keyboard)
 }
