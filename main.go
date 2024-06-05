@@ -56,23 +56,21 @@ func main() {
 
 	_ = out.Write(header)
 
-	for _, group := range v.ActionMaps {
-		for _, action := range group.Actions {
-			line := append(
-				[]string(nil),
-				group.Name,
-				tr.Translate(group.Category),
-				tr.Translate(group.Label),
-				group.Version,
-				action.Name,
-				tr.Translate(action.Label),
-				kbd.Normalize(action.Keyboard),
-				action.ActivationMode,
-				tr.Translate(action.Description),
-			)
+	for _, item := range v {
+		line := append(
+			[]string(nil),
+			item.Group.Name,
+			tr.Translate(item.Group.Category),
+			tr.Translate(item.Group.Label),
+			item.Group.Version,
+			item.Action.Name,
+			tr.Translate(item.Action.Label),
+			kbd.Normalize(item.Keyboard),
+			item.ActivationMode,
+			tr.Translate(item.Description),
+		)
 
-			_ = out.Write(line)
-		}
+		_ = out.Write(line)
 	}
 
 	out.Flush()

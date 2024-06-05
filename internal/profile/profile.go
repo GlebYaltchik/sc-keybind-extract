@@ -6,16 +6,20 @@ import (
 	"os"
 )
 
-type Info struct {
-	ActionMaps []ActionMap `xml:"actionmap"`
+type info struct {
+	ActionMaps []actionMap `xml:"actionmap"`
 }
 
-type ActionMap struct {
-	Name     string   `xml:"name,attr"`
-	Version  string   `xml:"version,attr"`
-	Label    string   `xml:"UILabel,attr"`
-	Category string   `xml:"UICategory,attr"`
-	Actions  []Action `xml:"action"`
+type actionMap struct {
+	Group
+	Actions []Action `xml:"action"`
+}
+
+type Group struct {
+	Name     string `xml:"name,attr"`
+	Version  string `xml:"version,attr"`
+	Label    string `xml:"UILabel,attr"`
+	Category string `xml:"UICategory,attr"`
 }
 
 type Action struct {
@@ -26,20 +30,38 @@ type Action struct {
 	ActivationMode string `xml:"activationMode,attr"`
 }
 
-func Decode(data []byte) (Info, error) {
-	var info Info
+type Actions []ActionInfo
 
-	if err := xml.Unmarshal(data, &info); err != nil {
-		return Info{}, fmt.Errorf("can't unmarshal profile data: %w", err)
-	}
-
-	return info, nil
+type ActionInfo struct {
+	Group
+	Action
 }
 
-func DecodeFile(name string) (Info, error) {
+func Decode(data []byte) (Actions, error) {
+	var info info
+
+	if err := xml.Unmarshal(data, &info); err != nil {
+		return nil, fmt.Errorf("can't unmarshal profile data: %w", err)
+	}
+
+	var res Actions
+
+	for _, group := range info.ActionMaps {
+		for _, action := range group.Actions {
+			res = append(res, ActionInfo{
+				Group:  group.Group,
+				Action: action,
+			})
+		}
+	}
+
+	return res, nil
+}
+
+func DecodeFile(name string) (Actions, error) {
 	data, err := os.ReadFile(name)
 	if err != nil {
-		return Info{}, fmt.Errorf("can't read profile: %w", err)
+		return nil, fmt.Errorf("can't read profile: %w", err)
 	}
 
 	return Decode(data)
