@@ -14,11 +14,13 @@ import (
 
 func main() {
 	var (
-		profileFileName string
-		l10nFileName    string
+		profileFileName     string
+		prevProfileFileName string
+		l10nFileName        string
 	)
 
 	pflag.StringVarP(&profileFileName, "profile", "p", "", "profile file name (usually Data/Libs/Config/defaultProfile.xml)")
+	pflag.StringVar(&prevProfileFileName, "prev-profile", "", "previous profile file name")
 	pflag.StringVarP(&l10nFileName, "localization", "l", "", "localization file name (usually Data/Localization/english/global.ini )")
 
 	pflag.Parse()
@@ -32,6 +34,16 @@ func main() {
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
+	}
+
+	var prev profile.Actions
+
+	if prevProfileFileName != "" {
+		prev, err = profile.DecodeFile(prevProfileFileName)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	tr, err := l10n.NewFromFile(l10nFileName)
@@ -52,6 +64,8 @@ func main() {
 		"Hotkey",
 		"Mode",
 		"Description",
+		"Status",
+		"Old Definition",
 	}
 
 	_ = out.Write(header)
@@ -70,8 +84,46 @@ func main() {
 			tr.Translate(item.Description),
 		)
 
+		line = append(line, compare(item, prev)...)
+
 		_ = out.Write(line)
 	}
 
 	out.Flush()
+}
+
+func compare(curr profile.ActionInfo, prevData profile.Actions) []string {
+	if prevData == nil {
+		return nil
+	}
+
+	old, ok := prevData.Lookup(curr)
+	if !ok {
+		return []string{"NEW"}
+	}
+
+	curr.Action.Label = ""
+	curr.Action.Description = ""
+	old.Action.Label = ""
+	old.Action.Description = ""
+
+	if curr.Action == old.Action {
+		return nil
+	}
+
+	if curr.Keyboard == "" && old.Keyboard != "" {
+		return []string{
+			"UNASSIGNED",
+			fmt.Sprintf("key: %s, mode: %s", kbd.Normalize(old.Keyboard), old.ActivationMode),
+		}
+	}
+
+	if curr.Keyboard != "" && old.Keyboard == "" {
+		return []string{"ASSIGNED"}
+	}
+
+	return []string{
+		"CHANGED",
+		fmt.Sprintf("key: %s, mode: %s", kbd.Normalize(old.Keyboard), old.ActivationMode),
+	}
 }

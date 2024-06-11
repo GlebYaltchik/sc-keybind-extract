@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type info struct {
@@ -37,6 +38,16 @@ type ActionInfo struct {
 	Action
 }
 
+func (a Actions) Lookup(ai ActionInfo) (ActionInfo, bool) {
+	for _, item := range a {
+		if item.Group.Name == ai.Group.Name && item.Action.Name == ai.Action.Name {
+			return item, true
+		}
+	}
+
+	return ActionInfo{}, false
+}
+
 func Decode(data []byte) (Actions, error) {
 	var info info
 
@@ -48,10 +59,14 @@ func Decode(data []byte) (Actions, error) {
 
 	for _, group := range info.ActionMaps {
 		for _, action := range group.Actions {
-			res = append(res, ActionInfo{
+			v := ActionInfo{
 				Group:  group.Group,
 				Action: action,
-			})
+			}
+
+			v.Keyboard = strings.TrimSpace(v.Keyboard)
+
+			res = append(res, v)
 		}
 	}
 
