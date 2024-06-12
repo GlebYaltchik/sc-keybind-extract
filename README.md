@@ -14,11 +14,15 @@ Simple tool to extract all Star Citizen keybinds to a CVS file
 Let's assume what the game data located at `C:\Program Files\Star Citizen\LIVE`
 ```
 unp4k.exe C:\Program Files\Star Citizen\LIVE\Data.p4k *.ini
-unp4k.exe C:\Program Files\Star Citizen\LIVE\Data.p4k *.xml
+unp4k.exe C:\Program Files\Star Citizen\LIVE\Data.p4k Data\Libs\Config
 ```
 That will create folders `Data` and `Engine` in the current directory.
 
-Now we have to unpack compressed xml data.
+OPTIONAL:\
+The XML files is encoded using CryEngine XMLB packing, 
+so if you want to read the data by eyes or use ot with some other tools,
+you can unpack all files. But this step is fully optional, 
+as the tool can work with packed files.
 ```
 unforge.exe Data\Libs\Config\defaultProfile.xml
 unforge.exe Data\Libs\Config\keybinding_localization.xml 
@@ -30,7 +34,7 @@ unforge.exe Data\Libs\Config\keybinding_localization.xml
 sc-keybind-extract --profile Data\Libs\Config\defaultProfile.xml --localization Data\Localization\english\global.ini > kbd.csv
 ```
 
-Additionally, you can add information about keymap changes comparing to previous version of the game.
+Additionally, you can add information about keymap changes comparing to a previous version of the game.
 To do that you have to provide the previous version of the game data as follows:
 
 ```

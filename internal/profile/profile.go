@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/GlebYaltchik/sc-keybind-extract/internal/cry/xmlb"
 )
 
 type info struct {
@@ -77,6 +79,11 @@ func DecodeFile(name string) (Actions, error) {
 	data, err := os.ReadFile(name)
 	if err != nil {
 		return nil, fmt.Errorf("can't read profile: %w", err)
+	}
+
+	data, err = xmlb.Decode(data)
+	if err != nil {
+		return nil, fmt.Errorf("can't decode profile: %w", err)
 	}
 
 	return Decode(data)
